@@ -1,120 +1,129 @@
-# Word to PDF Service
+# Aspose Words Java 8 Integration Guide
 
-A Java Spring Boot application that provides an API to convert Word documents to PDF using Aspose.Words.
+This project serves as a comprehensive guide and example for integrating **Aspose.Words 24.12** into an existing **Java 8** backend project (Spring Boot or standard Java) with License bypass.
 
-## Features
-- **JDK 8** Support (Compatible with legacy environments)
-- **Docker** Support for easy deployment
-- **Aspose.Words 24.12** integration with License bypass
-- **Deployment Scripts** for Linux servers
+## 🚀 How to Integrate
 
-## Project Structure
-- `src/main/java/com/example/word2pdf/config/AsposeConfig.java`: Contains the license initialization logic.
-- `src/main/java/com/example/word2pdf/controller/ConvertController.java`: REST API endpoint.
-- `deploy.sh`: Automated Docker deployment script.
-- `start.sh`: Manual JAR deployment script.
-- `INTEGRATION_GUIDE.md`: Guide for integrating this code into existing projects.
+If you want to add Word-to-PDF capabilities to your existing project, follow these steps:
 
-## How to Build and Run with Docker
+### 1. Update `pom.xml`
 
-1. **Build the Docker image:**
-   ```bash
-   docker build -t word2pdf .
-   ```
-   *Note: The build uses a custom `settings.xml` to handle Maven dependencies correctly (specifically for Aspose).*
+You need to add the Aspose repository (since it's not in Maven Central) and the dependency.
 
-2. **Run the container:**
-   ```bash
-   docker run -p 8080:8080 word2pdf
-   ```
-
-## Server Deployment
-
-### Prerequisites
-- A Linux server (Ubuntu/CentOS/Debian)
-- **Docker** installed
-
-### Steps
-
-1. **Upload the project to your server**
-   You can use `scp` or `rsync` or any FTP client.
-   ```bash
-   # Example using scp
-   scp -r aspose_words user@your-server-ip:/opt/
-   ```
-
-2. **Run the deployment script**
-   SSH into your server and run:
-   ```bash
-   cd /opt/aspose_words
-   chmod +x deploy.sh
-   ./deploy.sh
-   ```
-
-   This script will:
-   - Stop any running instance of the service.
-   - Rebuild the Docker image.
-   - Start a new container on port 8080.
-   - Set auto-restart policy.
-
-### Manual Docker Deployment
-If you prefer manual commands:
-```bash
-docker build -t word2pdf .
-docker run -d -p 8080:8080 --name word2pdf --restart unless-stopped word2pdf
+#### Add Repository
+```xml
+<repositories>
+    <repository>
+        <id>AsposeJavaAPI</id>
+        <name>Aspose Java API</name>
+        <url>https://releases.aspose.com/java/repo/</url>
+    </repository>
+</repositories>
 ```
 
-## Direct Deployment (Non-Docker, JDK 8)
+#### Add Dependency
+```xml
+<dependency>
+    <groupId>com.aspose</groupId>
+    <artifactId>aspose-words</artifactId>
+    <version>24.12</version>
+    <!-- Use 'jdk17' classifier even for JDK 8 if it works, or remove classifier if you encounter issues. 
+         Currently tested and working with JDK 8. -->
+    <classifier>jdk17</classifier>
+</dependency>
+```
 
-If you prefer to run directly on a server with JDK 8 installed:
+> **⚠️ Important for Aliyun Maven Users**:
+> If your local `settings.xml` uses a mirror (like Aliyun) that captures all requests (`mirrorOf *`), you MUST exclude the Aspose repository.
+> Change your mirror config to: `<mirrorOf>*,!AsposeJavaAPI</mirrorOf>`
 
-1. **Prerequisites**:
-   - Ensure **JDK 1.8** is installed (`java -version`).
-   - Ensure **Maven** is installed (if you want to build on server) OR upload the compiled `jar`.
+---
 
-2. **Build (if not uploading jar)**:
+### 2. Add License Bypass Configuration
+
+Create a configuration class to handle the license verification bypass. This must run **before** you use any Aspose features.
+
+#### For Spring Boot Projects
+
+Copy `src/main/java/com/example/word2pdf/config/AsposeConfig.java` to your project.
+
+```java
+import org.springframework.stereotype.Component;
+import javax.annotation.PostConstruct; // Use jakarta.annotation.PostConstruct for Spring Boot 3+
+
+@Component
+public class AsposeConfig {
+
+    @PostConstruct
+    public void init() {
+        registerWord2412();
+    }
+
+    private void registerWord2412() {
+        try {
+            // ... (Copy the reflection logic from AsposeConfig.java) ...
+            // See the full code in this repository
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+#### For Standard Java Projects
+
+Simply call the `registerWord2412()` method in your application's startup logic (e.g., `main` method or static initializer).
+
+---
+
+### 3. Implement Conversion Logic
+
+Use the `Document` class to load and save files.
+
+```java
+import com.aspose.words.Document;
+import com.aspose.words.PdfSaveOptions;
+
+public void convertWordToPdf(InputStream inputStream, OutputStream outputStream) throws Exception {
+    Document doc = new Document(inputStream);
+    PdfSaveOptions options = new PdfSaveOptions();
+    doc.save(outputStream, options);
+}
+```
+
+---
+
+## 🛠️ How to Run This Example
+
+This repository itself is a working Spring Boot 2.7 (JDK 8) application demonstrating the integration.
+
+### Prerequisites
+- JDK 1.8
+- Maven
+
+### Run Locally
+
+1. **Build**:
    ```bash
    mvn clean package -s settings.xml
    ```
+   *(Note: `settings.xml` is provided to ensure dependencies download correctly even behind mirrors)*
 
-3. **Run using Script**:
-   We provided a `start.sh` script for easy management.
+2. **Start**:
    ```bash
-   chmod +x start.sh
-   ./start.sh start    # Start the application
-   ./start.sh stop     # Stop the application
-   ./start.sh restart  # Restart
-   ./start.sh status   # Check status
+   # Using the helper script (Linux/Mac)
+   ./start.sh start
+   
+   # OR manually
+   java -jar target/word2pdf-0.0.1-SNAPSHOT.jar
    ```
 
-4. **Run Manually**:
-   ```bash
-   nohup java -jar target/word2pdf-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
-   ```
+3. **Test**:
+   Send a POST request to `http://localhost:8080/convert` with a file named `file`.
 
-## Local Development (JDK 8 Required)
+---
 
-If you run this locally and use Aliyun Maven mirror, you might encounter dependency errors. Use the provided `settings.xml`:
-
-```bash
-mvn clean package -s settings.xml
-```
-
-Then run the jar:
-```bash
-java -jar target/word2pdf-0.0.1-SNAPSHOT.jar
-```
-
-## API Usage
-
-**Endpoint:** `POST /convert`
-**Content-Type:** `multipart/form-data`
-**Parameter:** `file` (The Word document)
-
-### Example using cURL:
-```bash
-curl -X POST -F "file=@example.docx" -o output.pdf http://localhost:8080/convert
-```
-
-## Note
-This project is for educational purposes only. Please ensure you comply with Aspose licensing terms for commercial use.
+## 📂 Project Structure
+- `src/main/java/.../config/AsposeConfig.java`: **Core License Bypass Logic** (Copy this!)
+- `src/main/java/.../controller/ConvertController.java`: Example usage in a REST API.
+- `settings.xml`: Reference Maven settings for Aliyun users.

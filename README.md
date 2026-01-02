@@ -1,15 +1,19 @@
 # Word to PDF Service
 
-A Java Spring Boot application that provides an API to convert Word documents to PDF using Aspose.Words (JDK 17).
+A Java Spring Boot application that provides an API to convert Word documents to PDF using Aspose.Words.
 
 ## Features
-- **JDK 17** Support
+- **JDK 8** Support (Compatible with legacy environments)
 - **Docker** Support for easy deployment
-- **Aspose.Words 24.12** integration
+- **Aspose.Words 24.12** integration with License bypass
+- **Deployment Scripts** for Linux servers
 
 ## Project Structure
 - `src/main/java/com/example/word2pdf/config/AsposeConfig.java`: Contains the license initialization logic.
 - `src/main/java/com/example/word2pdf/controller/ConvertController.java`: REST API endpoint.
+- `deploy.sh`: Automated Docker deployment script.
+- `start.sh`: Manual JAR deployment script.
+- `INTEGRATION_GUIDE.md`: Guide for integrating this code into existing projects.
 
 ## How to Build and Run with Docker
 
